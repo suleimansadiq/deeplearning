@@ -18,6 +18,13 @@ import csv
 import os
 import time
 
+def save_layer_data(layer_name, data):
+    csv_filename = f'./csv_data/{layer_name}.csv'
+    with open(csv_filename, 'w', newline='') as csvfile:
+        csv_writer = csv.writer(csvfile)
+        csv_writer.writerow(data.keys())
+        csv_writer.writerows(zip(*data.values()))
+
 # Remove this for further evaluation
 np.random.seed(1)
 tf.set_random_seed(2)
@@ -396,6 +403,37 @@ with tf.Session() as sess:
     save_path = saver.save(sess, model_name)
     print("Model saved in path: %s" % save_path)
 toc = time.time()
+
+
+# Extract a d save block data
+block1_data = {
+    'bn_bias': bn1_b.eval(),
+    'bn_mean': bn1_mean.eval(),
+    'bn_var': bn1_var.eval(),
+    'bn_weight': bn1_weight.eval(),
+    'lin_bias': fc1_b.eval(),
+    'lin_weight': fc1_W.eval()
+}
+save_layer_data('block1', block1_data)
+
+block2_data = {
+    'bn_bias': bn2_b.eval(),
+    'bn_mean': bn2_mean.eval(),
+    'bn_var': bn2_var.eval(),
+    'bn_weight': bn2_weight.eval(),
+    'lin_bias': fc2_b.eval(),
+    'lin_weight': fc2_W.eval()
+}
+save_layer_data('block2', block2_data)
+
+# Capture and save data for the output block
+output_block_data = {
+    'lin_bias': fc3_b.eval(),
+    'lin_weight': fc3_W.eval()
+}
+save_layer_data('output_block', output_block_data)
+
+
 
 """## Evaluate the Model
 Once you are completely satisfied with your model, evaluate the performance of the model on the test set.
