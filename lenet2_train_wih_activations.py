@@ -88,7 +88,7 @@ print("Updated Image Shape: {}".format(X_train[0].shape))
 The `EPOCH` and `BATCH_SIZE` values affect the training speed and model accuracy.
 """
 
-EPOCHS = 30
+EPOCHS = 1
 BATCH_SIZE = 128
 print('Total epochs:', EPOCHS)
 
