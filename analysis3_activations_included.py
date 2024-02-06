@@ -81,6 +81,11 @@ def main():
         logits = tf.matmul(fc2, fc3_W) + fc3_b
 
         return logits
+        
+    def flatten(x_tensor):
+        # Flatten x_tensor to (Batch Size, Flattened Image Size)
+        flattened_shape = int(np.prod(x_tensor.get_shape()[1:]))
+        return tf.reshape(x_tensor, [-1, flattened_shape])
 
     # Create a TensorFlow session
     with tf.Session() as sess:
