@@ -4,7 +4,7 @@ import numpy as np
 
 def main():
     # Define the same model architecture as in your training script
-        def LeNet(x):
+    def LeNet(x):
         # Arguments used for tf.truncated_normal, randomly defines variables for the weights and biases for each layer
         mu = 0
         sigma = 0.1
