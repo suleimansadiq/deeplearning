@@ -19,7 +19,10 @@ import os
 import time
 
 def save_layer_data(layer_name, data):
-    csv_filename = f'./csv_data/{layer_name}.csv'
+    directory = './csv_data/'  # Set the directory for CSV files
+    if not os.path.exists(directory):
+        os.makedirs(directory)  # Create the directory if it does not exist
+    csv_filename = f'{directory}{layer_name}.csv'
     with open(csv_filename, 'w', newline='') as csvfile:
         csv_writer = csv.writer(csvfile)
         csv_writer.writerow(['data'])
@@ -180,17 +183,20 @@ with tf.Session() as sess:
     save_path = saver.save(sess, model_name)
     print("Model saved in path: %s" % save_path)
 
+def get_top5(X_data, y_data):
+    num_examples = len(X_data)
+    total_top5 = 0
+    sess = tf.get_default_session()
+    for offset in range(0, num_examples, BATCH_SIZE):
+        batch_x, batch_y = X_data[offset:offset + BATCH_SIZE], y_data[offset:offset + BATCH_SIZE]
+        top5 = sess.run(top5_operation, feed_dict={x: batch_x, y: batch_y})
+        total_top5 += (top5 * len(batch_x))
+    return total_top5 / num_examples
+
 with tf.Session() as sess:
     saver.restore(sess, model_name)
     test_top5 = get_top5(X_test, y_test)
     print("Test Top-5 Accuracy: {:.4f}".format(test_top5))
-
-# Save training results
-results_path = files_path + data_t + '.csv'
-with open(results_path, 'w') as file:
-    writer = csv.writer(file, delimiter=',')
-    writer.writerow(['Epoch', 'Loss', 'Accuracy', 'Validation Loss', 'Validation Accuracy'])
-    writer.writerows(zip(range(1, EPOCHS+1), hist['loss'], hist['acc'], hist['val_loss'], hist['val_acc']))
 
 # Output overall training time and result summary
 toc = time.time()
