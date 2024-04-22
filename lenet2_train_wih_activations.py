@@ -18,6 +18,9 @@ import csv
 import os
 import time
 
+# Set the start time before the session begins
+tic = time.time()
+
 def save_layer_data(layer_name, data):
     directory = './csv_data/'  # Set the directory for CSV files
     if not os.path.exists(directory):
@@ -153,6 +156,8 @@ def validate(X_data, y_data):
 files_path = './train_results/lenet5/' + data_set + '/'
 if not os.path.exists(files_path):
     os.makedirs(files_path)
+
+results_path = files_path + 'training_results.csv'  # Path where the training results will be saved
 
 with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
