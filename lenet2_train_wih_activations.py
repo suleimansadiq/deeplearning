@@ -58,7 +58,7 @@ X_test = np.pad(X_test, ((0, 0), (2, 2), (2, 2), (0, 0)), 'constant')
 
 print("Updated Image Shape: {}".format(X_train[0].shape))
 
-EPOCHS = 1
+EPOCHS = 30
 BATCH_SIZE = 128
 
 if len(sys.argv) > 1:
