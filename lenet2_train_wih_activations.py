@@ -168,36 +168,28 @@ with tf.Session() as sess:
         for offset in range(0, num_examples, BATCH_SIZE):
             end = offset + BATCH_SIZE
             batch_x, batch_y = X_train[offset:end], y_train[offset:end]
-            _, _loss, _acc, act_conv1, act_conv2, act_fc1, act_fc2 = sess.run(
-                [training_operation, loss_operation, accuracy_operation, conv1, conv2, fc1, fc2],
-                feed_dict={x: batch_x, y: batch_y})
-            
-            # Save activations occasionally
-            if i % 5 == 0 and offset == 0:  # Every 5 epochs and first batch
-                save_layer_data('conv1_epoch_{}'.format(i), act_conv1.tolist())
-                save_layer_data('conv2_epoch_{}'.format(i), act_conv2.tolist())
-                save_layer_data('fc1_epoch_{}'.format(i), act_fc1.tolist())
-                save_layer_data('fc2_epoch_{}'.format(i), act_fc2.tolist())
-
+            sess.run([training_operation], feed_dict={x: batch_x, y: batch_y})
+        
         val_loss, val_acc = validate(X_test, y_test)
         print("Epoch {} training complete. Loss: {:.4f}, Accuracy: {:.4f}, Validation Loss: {:.4f}, Validation Accuracy: {:.4f}".format(
             i+1, _loss, _acc, val_loss, val_acc))
+
+    # After training is complete, save the activations of the last epoch
+    _, _, _, act_conv1, act_conv2, act_fc1, act_fc2 = sess.run(
+        [loss_operation, accuracy_operation, conv1, conv2, fc1, fc2],
+        feed_dict={x: X_train, y: y_train})
+    
+    save_layer_data('conv1_final', act_conv1.tolist())
+    save_layer_data('conv2_final', act_conv2.tolist())
+    save_layer_data('fc1_final', act_fc1.tolist())
+    save_layer_data('fc2_final', act_fc2.tolist())
 
     # Save the model
     model_name = files_path + data_t + '.ckpt'
     save_path = saver.save(sess, model_name)
     print("Model saved in path: %s" % save_path)
 
-def get_top5(X_data, y_data):
-    num_examples = len(X_data)
-    total_top5 = 0
-    sess = tf.get_default_session()
-    for offset in range(0, num_examples, BATCH_SIZE):
-        batch_x, batch_y = X_data[offset:offset + BATCH_SIZE], y_data[offset:offset + BATCH_SIZE]
-        top5 = sess.run(top5_operation, feed_dict={x: batch_x, y: batch_y})
-        total_top5 += (top5 * len(batch_x))
-    return total_top5 / num_examples
-
+# Evaluating top-5 accuracy
 with tf.Session() as sess:
     saver.restore(sess, model_name)
     test_top5 = get_top5(X_test, y_test)
