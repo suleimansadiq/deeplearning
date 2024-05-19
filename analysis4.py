@@ -8,8 +8,8 @@ def main():
     def LeNet(x):
         # Your LeNet architecture definition here...
 
-    # Create a TensorFlow session
-    with tf.Session() as sess:
+        # Create a TensorFlow session
+        with tf.Session() as sess:
         # Load the trained model checkpoint
         saver = tf.train.import_meta_graph('posit8.ckpt.meta')  
         saver.restore(sess, 'posit8.ckpt') 
