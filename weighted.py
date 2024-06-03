@@ -34,7 +34,7 @@ def main():
                 weighted_linear_sums.append(weighted_linear_sum)
 
         # Export the weighted linear sums and biases to CSV files
-        output_folder = 'version2.0'
+        output_folder = 'weighted'
         os.makedirs(output_folder, exist_ok=True)
 
         for idx, wls in enumerate(weighted_linear_sums):
@@ -42,7 +42,11 @@ def main():
         for idx, bias in enumerate(biases):
             export_to_csv(output_folder, f'bias_{idx}', sess.run(bias))
 
+    print("Main function called.")
+    main()
+
 def export_to_csv(output_folder, variable_name, values):
+    print(f'Exporting {variable_name} to CSV...')
     # Specify the CSV file name with the output folder path
     csv_filename = f'{output_folder}/{variable_name}.csv'
 
@@ -72,4 +76,6 @@ def export_to_csv(output_folder, variable_name, values):
     print(f'{variable_name} values have been exported to {csv_filename}.')
 
 if __name__ == "__main__":
+    print("Script started.")
     main()
+    print("Script completed.")
