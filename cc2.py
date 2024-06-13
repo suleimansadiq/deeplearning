@@ -89,31 +89,44 @@ with tf.Session() as sess:
     weights_and_biases = {}
     for var in tf.trainable_variables():
         weights_and_biases[var.name] = sess.run(var)
+        print(f'Loaded variable {var.name} with shape {var.shape}')  # Debug print
 
     # Convert to cardinality constraints
-    def convert_to_cardinality_constraints(weights, biases):
+    def convert_to_cardinality_constraints(weights, biases, is_conv=False):
         constraints = []
-        for w, b in zip(weights, biases):
-            positive_w = (w > 0).astype(int)
-            negative_w = (w < 0).astype(int)
-            threshold = np.sum(positive_w * w) - b
-            constraints.append((positive_w, negative_w, threshold))
+        if is_conv:
+            for i in range(weights.shape[-1]):  # For each filter
+                w = weights[:, :, :, i].flatten()
+                b = biases[i]
+                positive_w = (w > 0).astype(int)
+                negative_w = (w < 0).astype(int)
+                threshold = np.sum(positive_w * w) - b
+                constraints.append((positive_w, negative_w, threshold))
+        else:
+            for i in range(weights.shape[1]):  # For each neuron
+                w = weights[:, i]
+                b = biases[i]
+                positive_w = (w > 0).astype(int)
+                negative_w = (w < 0).astype(int)
+                threshold = np.sum(positive_w * w) - b
+                constraints.append((positive_w, negative_w, threshold))
         return constraints
 
     all_constraints = []
-    layer_pairs = [
-        ('Variable:0', 'Variable_1:0'),
-        ('Variable_2:0', 'Variable_3:0'),
-        ('Variable_4:0', 'Variable_5:0'),
-        ('Variable_6:0', 'Variable_7:0'),
-        ('Variable_8:0', 'Variable_9:0')
+    layer_specs = [
+        ('Variable:0', 'Variable_1:0', True),   # conv1
+        ('Variable_2:0', 'Variable_3:0', True), # conv2
+        ('Variable_4:0', 'Variable_5:0', False),# fc1
+        ('Variable_6:0', 'Variable_7:0', False),# fc2
+        ('Variable_8:0', 'Variable_9:0', False) # fc3
     ]
 
-    for weight_name, bias_name in layer_pairs:
+    for weight_name, bias_name, is_conv in layer_specs:
         weights = weights_and_biases[weight_name]
         biases = weights_and_biases[bias_name]
-        constraints = convert_to_cardinality_constraints(weights, biases)
+        constraints = convert_to_cardinality_constraints(weights, biases, is_conv)
         all_constraints.extend(constraints)
+        print(f'Generated {len(constraints)} constraints for layer {weight_name} and {bias_name}')  # Debug print
 
 # Save constraints to a file
 output_file = './cardinality_constraints.txt'
