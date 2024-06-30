@@ -89,33 +89,44 @@ with tf.Session() as sess:
     weights_and_biases = {}
     for var in tf.trainable_variables():
         weights_and_biases[var.name] = sess.run(var)
-        print(f"Loaded variable {var.name} with shape {weights_and_biases[var.name].shape}")
+        print(f"Loaded variable {var.name} with shape {sess.run(var).shape}")
 
     # Convert to weighted linear sum constraints
-    def convert_to_weighted_linear_sum_constraints(weights, biases, layer_type):
+    def convert_to_weighted_linear_sum_constraints(weights, biases):
         constraints = []
-        if layer_type == 'conv':
-            weights = weights.reshape(-1, weights.shape[-1])  # Flatten the weights
-        for i in range(len(biases)):
-            constraint = f"{biases[i]} + " + " + ".join([f"{weights[j][i]}*x{j}" for j in range(weights.shape[0])]) + " >= 0"
-            constraints.append(constraint)
+        if len(weights.shape) == 4:  # Convolutional layer
+            filter_height, filter_width, input_depth, num_filters = weights.shape
+            for n in range(num_filters):
+                for fh in range(filter_height):
+                    for fw in range(filter_width):
+                        for fd in range(input_depth):
+                            constraint = f"{biases[n]} + {weights[fh, fw, fd, n]}*x{fh}{fw}{fd} >= 0"
+                            constraints.append(constraint)
+                            relu_constraint = f"y_out = if ({biases[n]} + {weights[fh, fw, fd, n]}*x{fh}{fw}{fd}) >= 0 then ({biases[n]} + {weights[fh, fw, fd, n]}*x{fh}{fw}{fd}) else 0"
+                            constraints.append(relu_constraint)
+        else:  # Fully connected layer
+            for i in range(len(biases)):
+                constraint = f"{biases[i]} + " + " + ".join([f"{weights[j, i]}*x{j}" for j in range(weights.shape[0])]) + " >= 0"
+                constraints.append(constraint)
+                relu_constraint = f"y_out = if ({biases[i]} + " + " + ".join([f"{weights[j, i]}*x{j}" for j in range(weights.shape[0])]) + f") >= 0 then ({biases[i]} + " + " + ".join([f"{weights[j, i]}*x{j}" for j in range(weights.shape[0])]) + ") else 0"
+                constraints.append(relu_constraint)
         return constraints
 
     all_constraints = []
     layer_pairs = [
-        ('Variable:0', 'Variable_1:0', 'conv'),
-        ('Variable_2:0', 'Variable_3:0', 'conv'),
-        ('Variable_4:0', 'Variable_5:0', 'fc'),
-        ('Variable_6:0', 'Variable_7:0', 'fc'),
-        ('Variable_8:0', 'Variable_9:0', 'fc')
+        ('Variable:0', 'Variable_1:0'),
+        ('Variable_2:0', 'Variable_3:0'),
+        ('Variable_4:0', 'Variable_5:0'),
+        ('Variable_6:0', 'Variable_7:0'),
+        ('Variable_8:0', 'Variable_9:0')
     ]
 
-    for weight_name, bias_name, layer_type in layer_pairs:
+    for weight_name, bias_name in layer_pairs:
         weights = weights_and_biases[weight_name]
         biases = weights_and_biases[bias_name]
-        constraints = convert_to_weighted_linear_sum_constraints(weights, biases, layer_type)
-        all_constraints.extend(constraints)
+        constraints = convert_to_weighted_linear_sum_constraints(weights, biases)
         print(f"Generated {len(constraints)} constraints for layer {weight_name} and {bias_name}")
+        all_constraints.extend(constraints)
 
 # Save constraints to a file
 output_file = './weighted_linear_sum_constraints.txt'
