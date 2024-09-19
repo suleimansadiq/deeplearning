@@ -69,13 +69,8 @@ int main(void) {
 
     // Read each line from the input file
     char line[1024];
-    int constraint_count = 0;
 
     while (fgets(line, sizeof(line), input_file)) {
-        if (constraint_count >= 2) {
-            break;  // Process only the first two constraints
-        }
-
         char final_line[2048];  // Buffer to hold the final modified line
         final_line[0] = '\0';   // Initialize empty string for each line
         char *current_position = line;
@@ -115,8 +110,6 @@ int main(void) {
                     match_length = (int)((matches[1].rm_eo) - (matches[1].rm_so) + 1);  // Explicit cast to int
                     snprintf(constant_str, match_length, "%s", token + matches[1].rm_so);  // Use match_length
 
-
-
                     // Extract the remaining part (variable with operator)
                     char remaining_str[100];
                     snprintf(remaining_str, matches[2].rm_eo - matches[2].rm_so + 1, "%s", token + matches[2].rm_so);
@@ -143,9 +136,6 @@ int main(void) {
         // Write the final modified line to the output file
         printf("Final processed line: %s\n", final_line);  // Log the final output
         fputs(final_line, output_file);
-
-        // Increment constraint count
-        constraint_count++;
     }
 
     // Clean up
@@ -154,6 +144,6 @@ int main(void) {
     fclose(input_file);
     fclose(output_file);
 
-    printf("Successfully converted constants to 8-bit posit for first two constraints and saved to %s\n", output_file_path);
+    printf("Successfully converted constants to 8-bit posit for all constraints and saved to %s\n", output_file_path);
     return 0;
 }
